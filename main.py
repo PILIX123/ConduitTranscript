@@ -1,6 +1,11 @@
 from pyPodcastParser.Podcast import Podcast
 from requests import get
 import whisper
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import torch
+
+t = whisper.load_model("large", "cpu")
 
 
 def startsWhisperSingle(model: whisper.Whisper, episodeData: tuple[str, str]):
@@ -27,11 +32,12 @@ def startWhisperMulti(device1: str, device2: str, episodeData: tuple[str, str]):
         f.write(result["text"])
 
 
+def test():
+    return "test"
+
+
 podcast = Podcast(get("https://www.relay.fm/conduit/feed").content)
 
 episodeUrls = list()
 for episode in podcast.items:
     episodeUrls.append((episode.title, episode.enclosure_url))
-
-model = whisper.load_model("large", device="cuda:0")
-result = model.transcribe(episodeUrls[0][1])
