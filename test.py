@@ -94,5 +94,12 @@ while working:
         t8 = listThreadsModel8[0]
         t8.start()
 
-    if len(listThreadsModel8) != 0 or len(listThreadsModel7) != 0 or len(listThreadsModel6) != 0 or len(listThreadsModel5) != 0 or len(listThreadsModel4) != 0 or len(listThreadsModel3) != 0 or len(listThreadsModel2) != 0 or len(listThreadsModel1) != 0:
+    if len(listThreadsModel8) != 0 \
+            or len(listThreadsModel7) != 0 \
+            or len(listThreadsModel6) != 0 \
+            or len(listThreadsModel5) != 0 \
+            or len(listThreadsModel4) != 0 \
+            or len(listThreadsModel3) != 0 \
+            or len(listThreadsModel2) != 0 \
+            or len(listThreadsModel1) != 0:
         working = False
