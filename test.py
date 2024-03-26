@@ -1,9 +1,7 @@
 import torch
 import whisper
-import concurrent.futures
 from pyPodcastParser.Podcast import Podcast
 from requests import get
-from numpy import array_split
 import more_itertools
 import threading
 
