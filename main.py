@@ -1,11 +1,6 @@
 from pyPodcastParser.Podcast import Podcast
 from requests import get
 import whisper
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import torch
-
-t = whisper.load_model("large", "cpu")
 
 
 def startsWhisperSingle(model: whisper.Whisper, episodeData: tuple[str, str]):

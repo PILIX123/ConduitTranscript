@@ -12,9 +12,6 @@ for episode in podcast.items:
     episodeUrls.append((episode.title, episode.enclosure_url))
 
 chunk = more_itertools.divide(8, episodeUrls)
-for c in chunk:
-    for x in c:
-        print(x)
 listModel = list()
 for device in range(torch.cuda.device_count()):
     listModel.append(whisper.load_model("medium", f"cuda:{device}"))
