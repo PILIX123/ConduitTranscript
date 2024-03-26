@@ -1,7 +1,6 @@
 from pyPodcastParser.Podcast import Podcast
 from requests import get
 import whisper
-import torch
 
 podcast = Podcast(get("https://www.relay.fm/conduit/feed").content)
 
