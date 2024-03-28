@@ -26,13 +26,13 @@ def startsWhisperSingle(model: whisper.Whisper, episodeData: tuple[str, str]):
 
 listListThreadsModel = list()
 for x in range(torch.cuda.device_count()):
-    listListThreadsModel[x] = [threading.Thread(target=startsWhisperSingle, args=[
-        listModel[x], episodeContent]) for episodeContent in chunk[x]]
+    listListThreadsModel.append([threading.Thread(target=startsWhisperSingle, args=[
+        listModel[x], episodeContent]) for episodeContent in chunk[x]])
 
 working = True
 listT = list()
-for x in range(listListThreadsModel):
-    listT[x] = listListThreadsModel[x][0]
+for x in listListThreadsModel:
+    listT.append(x[0])
 
 for t in listT:
     t.start()
