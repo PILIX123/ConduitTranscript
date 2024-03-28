@@ -1,6 +1,21 @@
+import torch
+import whisper
 from pyPodcastParser.Podcast import Podcast
 from requests import get
-import whisper
+import more_itertools
+import threading
+import time
+
+podcast = Podcast(get("https://www.relay.fm/conduit/feed").content)
+
+episodeUrls = list()
+for episode in podcast.items:
+    episodeUrls.append((episode.title, episode.enclosure_url))
+
+chunk = more_itertools.divide(torch.cuda.device_count(), episodeUrls)
+listModel = list()
+for device in range(torch.cuda.device_count()):
+    listModel.append(whisper.load_model("medium", f"cuda:{device}"))
 
 
 def startsWhisperSingle(model: whisper.Whisper, episodeData: tuple[str, str]):
@@ -10,29 +25,32 @@ def startsWhisperSingle(model: whisper.Whisper, episodeData: tuple[str, str]):
         f.write(result["text"])
 
 
-def startWhisperMulti(device1: str, device2: str, episodeData: tuple[str, str]):
-    model = whisper.load_model("large", device="cpu")
+listListThreadsModel = list()
+for x in range(torch.cuda.device_count()):
+    listListThreadsModel.append([threading.Thread(target=startsWhisperSingle, args=[
+        listModel[x], episodeContent]) for episodeContent in chunk[x]])
 
-    model.encoder.to(device1)
-    model.decoder.to(device2)
+working = True
+listT = list()
+for x in listListThreadsModel:
+    listT.append(x[0])
 
-    model.decoder.register_forward_pre_hook(lambda _, inputs: tuple(
-        [inputs[0].to(device2), inputs[1].to(device2)] + list(inputs[2:])))
-    model.decoder.register_forward_hook(
-        lambda _, inputs, outputs: outputs.to(device1))
+for t in listT:
+    t.start()
 
-    result = model.transcribe(episodeData[1])
-    t = episodeData[0].replace(":", "")
-    with open(f"{t}.txt", "w") as f:
-        f.write(result["text"])
+while working:
+    for i, t in enumerate(listT):
+        if not t.is_alive():
+            if len(listListThreadsModel[i]) == 0:
+                continue
+            listListThreadsModel[i].pop(0)
+            t = listListThreadsModel[i][0]
+            t.start()
 
-
-def test():
-    return "test"
-
-
-podcast = Podcast(get("https://www.relay.fm/conduit/feed").content)
-
-episodeUrls = list()
-for episode in podcast.items:
-    episodeUrls.append((episode.title, episode.enclosure_url))
+    x = 0
+    for l in listListThreadsModel:
+        if len(l) == 0:
+            x += 1
+    if x == len(listListThreadsModel):
+        working = False
+    time.sleep(300)
