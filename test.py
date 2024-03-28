@@ -4,6 +4,7 @@ from pyPodcastParser.Podcast import Podcast
 from requests import get
 import more_itertools
 import threading
+import time
 
 podcast = Podcast(get("https://www.relay.fm/conduit/feed").content)
 
@@ -50,5 +51,6 @@ while working:
     for l in listListThreadsModel:
         if len(l) == 0:
             x += 1
-    if x == 0:
+    if x == len(listListThreadsModel):
         working = False
+    time.sleep(300)
