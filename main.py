@@ -5,6 +5,7 @@ from requests import get
 import more_itertools
 import threading
 import time
+import io
 
 podcast = Podcast(get("https://www.relay.fm/conduit/feed").content)
 
@@ -13,44 +14,18 @@ for episode in podcast.items:
     episodeUrls.append((episode.title, episode.enclosure_url))
 
 chunk = more_itertools.divide(torch.cuda.device_count(), episodeUrls)
-listModel = list()
-for device in range(torch.cuda.device_count()):
-    listModel.append(whisper.load_model("medium", f"cuda:{device}"))
 
+def startsWhisperSingle(device: int, episodeData: list[tuple[str, str]]):
+    model = whisper.load_model("medium", f"cuda:{device}")
+    for episode in episodeData:
+        t = episode[0].replace(":", "")
+        time.sleep(10*device)
+        result = model.transcribe(episode[1])
+        with open(f"{t}.txt", "w") as f:
+            f.write(result["text"])
 
-def startsWhisperSingle(model: whisper.Whisper, episodeData: tuple[str, str]):
-    result = model.transcribe(episodeData[1])
-    t = episodeData[0].replace(":", "")
-    with open(f"{t}.txt", "w") as f:
-        f.write(result["text"])
+listThread = [threading.Thread(target=startsWhisperSingle,args=[x,chunk[x]]) for x in range(torch.cuda.device_count())]
 
-
-listListThreadsModel = list()
-for x in range(torch.cuda.device_count()):
-    listListThreadsModel.append([threading.Thread(target=startsWhisperSingle, args=[
-        listModel[x], episodeContent]) for episodeContent in chunk[x]])
-
-working = True
-listT = list()
-for x in listListThreadsModel:
-    listT.append(x[0])
-
-for t in listT:
-    t.start()
-
-while working:
-    for i, t in enumerate(listT):
-        if not t.is_alive():
-            if len(listListThreadsModel[i]) == 0:
-                continue
-            listListThreadsModel[i].pop(0)
-            t = listListThreadsModel[i][0]
-            t.start()
-
-    x = 0
-    for l in listListThreadsModel:
-        if len(l) == 0:
-            x += 1
-    if x == len(listListThreadsModel):
-        working = False
-    time.sleep(300)
+for thread in listThread:
+    thread.start()
+time.sleep(500)
